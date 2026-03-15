@@ -1,6 +1,6 @@
 services:
   # 1. PostgreSQL Database
-  - type: psql
+  - type: postgres
     name: smart-attendance-db
     plan: free
     ipAllowList: [] # Allows internal connections from other Render services automatically
