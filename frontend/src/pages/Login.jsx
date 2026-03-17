@@ -59,17 +59,17 @@ export default function Login() {
 
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <motion.div initial={{ x: -30, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.3 }}>
-                            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Email</label>
+                            <br /> <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.2">Email</label>
                             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                                 placeholder="professor@university.edu" className="input-glass" />
                         </motion.div>
 
                         <motion.div initial={{ x: -30, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.4 }}>
-                            <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Password</label>
+                            <br />   <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">Password</label>
                             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••" className="input-glass" />
                         </motion.div>
-
+                        <br />
                         <motion.button
                             initial={{ y: 20, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
@@ -81,7 +81,7 @@ export default function Login() {
                             {loading ? 'Signing in...' : 'Sign In'}
                         </motion.button>
                     </form>
-
+                    <br />
                     <motion.p
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -90,7 +90,7 @@ export default function Login() {
                     >
                         Don't have an account?{' '}
                         <Link to="/register" className="font-medium" style={{ color: 'var(--accent-cyan)' }}>Create one</Link>
-                    </motion.p>
+                    </motion.p> <br />
                 </div>
             </motion.div>
         </div>

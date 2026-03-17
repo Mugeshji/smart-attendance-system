@@ -1,29 +1,147 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import Scene3D from '../components/Scene3D';
 import toast from 'react-hot-toast';
+import gsap from 'gsap';
 
 export default function Register() {
-    const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '', phone: '', department: '', universityName: '' });
+    const [form, setForm] = useState({
+        name: '', email: '', password: '',
+        confirmPassword: '', phone: '',
+        department: '', universityName: ''
+    });
+
     const [loading, setLoading] = useState(false);
+
     const { register } = useAuth();
     const navigate = useNavigate();
 
-    const update = (field) => (e) => setForm({ ...form, [field]: e.target.value });
+    const formRef = useRef();
+    const containerRef = useRef();
+
+    const update = (field) => (e) =>
+        setForm({ ...form, [field]: e.target.value });
+
+    // GSAP ENTRY (REFINED)
+    useEffect(() => {
+        let ctx = gsap.context(() => {
+            const tl = gsap.timeline();
+            tl.from(containerRef.current, {
+                opacity: 0,
+                scale: 0.95,
+                duration: 1.2,
+                ease: "power4.out"
+            })
+                .from(".input-field", {
+                    y: 20,
+                    opacity: 0,
+                    stagger: 0.05,
+                    duration: 0.6,
+                    ease: "power2.out"
+                }, "-=0.8");
+        });
+        return () => ctx.revert();
+    }, []);
+
+    // PARTICLES (UNCHANGED)
+    useEffect(() => {
+        const canvas = document.getElementById("particle-canvas");
+        const ctx = canvas.getContext("2d");
+
+        let particles = [];
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        window.addEventListener("resize", () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        window.addEventListener("mousemove", (e) => {
+            for (let i = 0; i < 2; i++) {
+                particles.push({
+                    x: e.clientX,
+                    y: e.clientY,
+                    size: Math.random() * 2 + 1,
+                    alpha: 1,
+                    vx: (Math.random() - 0.5) * 1.2,
+                    vy: (Math.random() - 0.5) * 1.2
+                });
+            }
+        });
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach((p, index) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.01;
+
+                let gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 6);
+                gradient.addColorStop(0, `rgba(200,200,255,${p.alpha})`);
+                gradient.addColorStop(1, "transparent");
+
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (p.alpha <= 0) particles.splice(index, 1);
+            });
+
+            if (particles.length > 120) particles.shift();
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    }, []);
+
+    // TILT (UNCHANGED)
+    const handleMouseMove = (e) => {
+        const rect = formRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const rotateX = ((y / rect.height) - 0.5) * 8;
+        const rotateY = ((x / rect.width) - 0.5) * -8;
+
+        gsap.to(formRef.current, {
+            rotateX,
+            rotateY,
+            transformPerspective: 1000,
+            duration: 0.3
+        });
+    };
+
+    const resetTilt = () => {
+        gsap.to(formRef.current, {
+            rotateX: 0,
+            rotateY: 0,
+            duration: 0.5
+        });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!form.name || !form.email || !form.password) { toast.error('Please fill required fields'); return; }
-        if (form.password !== form.confirmPassword) { toast.error('Passwords do not match'); return; }
-        if (form.password.length < 6) { toast.error('Password must be at least 6 characters'); return; }
+
+        if (!form.name || !form.email || !form.password) {
+            toast.error('Please fill required fields'); return;
+        }
+        if (form.password !== form.confirmPassword) {
+            toast.error('Passwords do not match'); return;
+        }
+        if (form.password.length < 6) {
+            toast.error('Password must be at least 6 characters'); return;
+        }
 
         setLoading(true);
         try {
             await register(form);
             toast.success('Account created!');
-            // User context is slow to update, directly navigate
             setTimeout(() => navigate('/dashboard'), 500);
         } catch (err) {
             toast.error(err.response?.data?.message || 'Registration failed');
@@ -33,58 +151,172 @@ export default function Register() {
     };
 
     const fields = [
-        { key: 'name', label: 'Full Name', type: 'text', placeholder: 'Dr. John Smith', required: true },
-        { key: 'email', label: 'Email', type: 'email', placeholder: 'professor@university.edu', required: true },
-        { key: 'password', label: 'Password', type: 'password', placeholder: '••••••••', required: true },
-        { key: 'confirmPassword', label: 'Confirm Password', type: 'password', placeholder: '••••••••', required: true },
-        { key: 'phone', label: 'Phone Number', type: 'tel', placeholder: '+1 (555) 000-0000' },
-        { key: 'department', label: 'Department', type: 'text', placeholder: 'Computer Science' },
-        { key: 'universityName', label: 'University Name', type: 'text', placeholder: 'MIT' },
+        { key: 'name', label: 'Full Name', type: 'text' },
+        { key: 'email', label: 'Email', type: 'email' },
+        { key: 'password', label: 'Password', type: 'password' },
+        { key: 'confirmPassword', label: 'Confirm Password', type: 'password' },
+        { key: 'phone', label: 'Phone Number', type: 'tel' },
+        { key: 'department', label: 'Department', type: 'text' },
+        { key: 'universityName', label: 'University Name', type: 'text' },
     ];
 
     return (
-        <div className="min-h-screen flex items-center justify-center relative overflow-hidden animated-gradient-bg py-10">
-            <Scene3D />
+        <div className="min-h-screen flex items-center justify-center bg-black text-white relative overflow-hidden">
 
-            <div className="absolute top-1/3 right-1/4 w-80 h-80 rounded-full opacity-20 blur-[100px]" style={{ background: 'var(--accent-violet)' }} />
-            <div className="absolute bottom-1/3 left-1/4 w-80 h-80 rounded-full opacity-15 blur-[100px]" style={{ background: 'var(--accent-cyan)' }} />
+            {/* Scene (reduced intensity) */}
+            <div className="absolute inset-0 z-0 opacity-60">
+                <Scene3D />
+            </div>
 
-            <motion.div
-                initial={{ opacity: 0, y: 40, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.8, type: 'spring' }}
-                className="relative z-10 w-full max-w-lg mx-4"
-            >
-                <div className="glass-card-strong p-8">
-                    <div className="text-center mb-6">
-                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: 'spring' }}
-                            className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center text-2xl font-black"
-                            style={{ background: 'var(--gradient-2)' }}>
-                            SA
-                        </motion.div>
-                        <h2 className="text-2xl font-bold gradient-text-2 mb-1">Create Account</h2>
-                        <p className="text-sm text-[var(--text-muted)]">Join the Smart Attendance Platform</p>
-                    </div>
+            {/* Balanced overlay (REFINED) */}
+            <div className="absolute inset-0 z-10 
+            bg-gradient-to-br from-black/40 via-transparent to-black/40 pointer-events-none"></div>
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        {fields.map((f, i) => (
-                            <motion.div key={f.key} initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.15 + i * 0.05 }}>
-                                <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">{f.label}{f.required && ' *'}</label>
-                                <input type={f.type} value={form[f.key]} onChange={update(f.key)} placeholder={f.placeholder} className="input-glass" />
-                            </motion.div>
-                        ))}
+            {/* Particles */}
+            <canvas id="particle-canvas" className="absolute inset-0 z-20 pointer-events-none"></canvas>
 
-                        <motion.button initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.6 }}
-                            type="submit" disabled={loading} className="btn-primary w-full disabled:opacity-50 mt-2">
-                            {loading ? 'Creating Account...' : 'Create Account'}
-                        </motion.button>
-                    </form>
+            {/* Glow */}
+            <div className="absolute w-[600px] h-[600px] bg-purple-600 opacity-20 blur-[150px] top-[-100px] left-[-100px]" />
+            <div className="absolute w-[500px] h-[500px] bg-cyan-500 opacity-20 blur-[150px] bottom-[-100px] right-[-100px]" />
 
-                    <p className="text-center text-sm text-[var(--text-muted)] mt-5">
-                        Already have an account? <Link to="/login" className="font-medium" style={{ color: 'var(--accent-violet)' }}>Sign In</Link>
+            <div ref={containerRef} className="relative z-30 w-full max-w-6xl grid md:grid-cols-2 gap-12 p-6">
+
+                {/* LEFT */}
+                <div className="hidden md:flex flex-col justify-center">
+                    <h1 className="text-6xl font-bold leading-tight text-white">
+                        Create Your Future
+                    </h1>
+                    <p className="mt-4 text-white/90 max-w-md">
+                        A next-generation smart attendance platform with immersive UI.
                     </p>
                 </div>
-            </motion.div>
+
+                {/* FORM */}
+                <div
+                    ref={formRef}
+                    onMouseMove={handleMouseMove}
+                    onMouseLeave={resetTilt}
+                    className="relative backdrop-blur-2xl bg-white/[0.18] border border-white/20 
+                    p-10 md:p-12 rounded-[32px] shadow-[0_30px_100px_rgba(0,0,0,0.7)]"
+                >
+
+                    <h2 className="text-3xl font-bold mb-10 text-center bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+                        <br />   Create Account
+                    </h2>
+
+                    <form onSubmit={handleSubmit} className="space-y-8" autoComplete="off">
+
+                        <div className="grid md:grid-cols-2 gap-6">
+                            {['name', 'email'].map(key => {
+                                const f = fields.find(x => x.key === key);
+                                return (
+                                    <div key={f.key} className="input-field relative group">
+                                        <br />       <input
+                                            type={f.type}
+                                            value={form[f.key]}
+                                            onChange={update(f.key)}
+                                            placeholder=" "
+                                            autoComplete={key === 'email' ? 'new-email' : 'off'}
+                                            className="peer w-full px-4 pt-7 pb-2 rounded-xl bg-white/[0.05] border border-white/10 text-white focus:border-cyan-500/50 focus:bg-white/[0.08] focus:ring-4 focus:ring-cyan-500/5 outline-none transition-all duration-300"
+                                        />
+                                        <label className="absolute left-4 top-5 text-white/30 transition-all duration-300 pointer-events-none text-base
+                                            peer-focus:top-2 peer-focus:text-xs peer-focus:text-cyan-400
+                                            peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-cyan-400">
+                                            {f.label}
+                                        </label><br />
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-6">
+                            {['password', 'confirmPassword'].map(key => {
+                                const f = fields.find(x => x.key === key);
+                                return (
+                                    <div key={f.key} className="input-field relative group">
+                                        <br />   <input
+                                            type={f.type}
+                                            value={form[f.key]}
+                                            onChange={update(f.key)}
+                                            placeholder=" "
+                                            autoComplete="new-password"
+                                            className="peer w-full px-4 pt-7 pb-2 rounded-xl bg-white/[0.05] border border-white/10 text-white focus:border-cyan-500/50 focus:bg-white/[0.08] focus:ring-4 focus:ring-cyan-500/5 outline-none transition-all duration-300"
+                                        /> <br />
+                                        <label className="absolute left-4 top-5 text-white/30 transition-all duration-300 pointer-events-none text-base
+                                            peer-focus:top-2 peer-focus:text-xs peer-focus:text-cyan-400
+                                            peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-cyan-400">
+                                            {f.label}
+                                        </label>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-6">
+                            {['phone', 'department'].map(key => {
+                                const f = fields.find(x => x.key === key);
+                                return (
+                                    <div key={f.key} className="input-field relative group">
+                                        <br />  <input
+                                            type={f.type}
+                                            value={form[f.key]}
+                                            onChange={update(f.key)}
+                                            placeholder=" "
+                                            autoComplete="off"
+                                            className="peer w-full px-4 pt-7 pb-2 rounded-xl bg-white/[0.05] border border-white/10 text-white focus:border-cyan-500/50 focus:bg-white/[0.08] focus:ring-4 focus:ring-cyan-500/5 outline-none transition-all duration-300"
+                                        />
+                                        <label className="absolute left-4 top-5 text-white/30 transition-all duration-300 pointer-events-none text-base
+                                            peer-focus:top-2 peer-focus:text-xs peer-focus:text-cyan-400
+                                            peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-cyan-400">
+                                            {f.label}
+                                        </label>
+                                    </div>
+                                );
+                            })}
+
+                            <div className="input-field relative group md:col-span-2">
+                                {(() => {
+                                    const f = fields.find(x => x.key === 'universityName');
+                                    return (
+                                        <>
+                                            <br /> <input
+                                                type={f.type}
+                                                value={form[f.key]}
+                                                onChange={update(f.key)}
+                                                placeholder=" "
+                                                autoComplete="off"
+                                                className="peer w-full px-4 pt-7 pb-2 rounded-xl bg-white/[0.05] border border-white/10 text-white focus:border-cyan-500/50 focus:bg-white/[0.08] focus:ring-4 focus:ring-cyan-500/5 outline-none transition-all duration-300"
+                                            />
+                                            <label className="absolute left-4 top-5 text-white/30 transition-all duration-300 pointer-events-none text-base
+                                                peer-focus:top-2 peer-focus:text-xs peer-focus:text-cyan-400
+                                                peer-[:not(:placeholder-shown)]:top-2 peer-[:not(:placeholder-shown)]:text-xs peer-[:not(:placeholder-shown)]:text-cyan-400">
+                                                {f.label}
+                                            </label>
+                                        </>
+                                    );
+                                })()}
+                            </div>
+                        </div>
+
+                        <br />
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="submit-btn w-full py-4 rounded-xl bg-white text-black font-medium hover:scale-[1.02] transition text-lg"
+                        >
+                            {loading ? 'Creating...' : 'Create Account'}
+                        </button>
+
+                    </form>
+
+                    <br />
+
+                    <p className="text-center text-sm text-white/80 mt-6">
+                        Already have an account? <Link to="/login" className="text-white">Sign In</Link>
+                    </p>
+                </div>
+            </div>
         </div>
     );
 }
