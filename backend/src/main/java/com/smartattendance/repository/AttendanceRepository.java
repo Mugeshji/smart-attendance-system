@@ -26,7 +26,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     @Query("SELECT COUNT(a) FROM Attendance a WHERE a.date = :date AND a.student.professor.id = :profId")
     long countByDateAndProfessorId(@Param("date") LocalDate date, @Param("profId") Long profId);
 
-    @Query("SELECT a.date, COUNT(a) FROM Attendance a WHERE a.student.professor.id = :profId AND a.date BETWEEN :start AND :end AND a.status IN ('PRESENT','LATE') GROUP BY a.date ORDER BY a.date")
+    @Query("SELECT a.date, COUNT(a) FROM Attendance a WHERE a.student.professor.id = :profId AND a.date BETWEEN :start AND :end AND a.status IN ('PRESENT','LATE','CHECKED_OUT') GROUP BY a.date ORDER BY a.date")
     List<Object[]> getDailyAttendanceCounts(@Param("profId") Long profId, @Param("start") LocalDate start,
             @Param("end") LocalDate end);
 

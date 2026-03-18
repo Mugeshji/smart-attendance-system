@@ -89,31 +89,27 @@ public class AttendanceService {
     public Map<String, Object> getWeeklyStats(Long professorId) {
         LocalDate end = LocalDate.now();
         LocalDate start = end.minusDays(6);
-        List<Object[]> data = attendanceRepository.getDailyAttendanceCounts(professorId, start, end);
-
-        List<Map<String, Object>> chartData = new ArrayList<>();
-        for (Object[] row : data) {
-            Map<String, Object> point = new HashMap<>();
-            point.put("date", row[0].toString());
-            point.put("count", ((Number) row[1]).intValue());
-            chartData.add(point);
-        }
-
-        Map<String, Object> result = new HashMap<>();
-        result.put("data", chartData);
-        return result;
+        return getStatsForRange(professorId, start, end);
     }
 
     public Map<String, Object> getMonthlyStats(Long professorId) {
         LocalDate end = LocalDate.now();
         LocalDate start = end.minusDays(29);
+        return getStatsForRange(professorId, start, end);
+    }
+
+    private Map<String, Object> getStatsForRange(Long professorId, LocalDate start, LocalDate end) {
         List<Object[]> data = attendanceRepository.getDailyAttendanceCounts(professorId, start, end);
+        Map<LocalDate, Integer> counts = new HashMap<>();
+        for (Object[] row : data) {
+            counts.put((LocalDate) row[0], ((Number) row[1]).intValue());
+        }
 
         List<Map<String, Object>> chartData = new ArrayList<>();
-        for (Object[] row : data) {
+        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
             Map<String, Object> point = new HashMap<>();
-            point.put("date", row[0].toString());
-            point.put("count", ((Number) row[1]).intValue());
+            point.put("date", date.toString());
+            point.put("count", counts.getOrDefault(date, 0));
             chartData.add(point);
         }
 
@@ -125,7 +121,8 @@ public class AttendanceService {
     public Map<String, Long> getPieStats(Long professorId) {
         DashboardStats stats = getDashboardStats(professorId);
         Map<String, Long> pie = new HashMap<>();
-        pie.put("present", stats.getPresentToday());
+        // Use currentlyInside (present+late) so slices (inside, checkedOut, absent) are disjoint
+        pie.put("present", stats.getCurrentlyInside());
         pie.put("absent", stats.getAbsentToday());
         pie.put("checkedOut", stats.getCheckedOutToday());
         return pie;
