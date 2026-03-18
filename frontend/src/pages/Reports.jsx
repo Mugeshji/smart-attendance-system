@@ -102,21 +102,12 @@ export default function Reports() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Pie Chart */}
                 <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                    className="glass-card p-4 sm:p-6">
+                    className="glass-card p-6">
                     <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">Present vs Absent</h3>
                     <ResponsiveContainer width="100%" height={280}>
                         {pieData.reduce((sum, item) => sum + item.value, 0) > 0 ? (
                             <PieChart>
-                                <Pie 
-                                    data={pieData} 
-                                    cx="50%" 
-                                    cy="50%" 
-                                    innerRadius={60} 
-                                    outerRadius={80} 
-                                    paddingAngle={5} 
-                                    dataKey="value" 
-                                    label={({ name, percent, value }) => value > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
-                                >
+                                <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
                                     {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                                 </Pie>
                                 <Tooltip content={<CustomTooltip />} />
@@ -177,26 +168,26 @@ export default function Reports() {
                     <HiOutlineDownload /> Download Reports
                 </h3>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                <div className="flex flex-col sm:flex-row gap-4 items-end">
                     <div>
                         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
                             <HiOutlineCalendar className="inline mr-1" /> Start Date
                         </label>
-                        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="input-glass !py-2.5 !text-sm w-full" />
+                        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="input-glass !py-2.5 !text-sm" />
                     </div>
                     <div>
                         <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">
                             <HiOutlineCalendar className="inline mr-1" /> End Date
                         </label>
-                        <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="input-glass !py-2.5 !text-sm w-full" />
+                        <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="input-glass !py-2.5 !text-sm" />
                     </div>
-                    <div className="flex gap-3 sm:col-span-2 lg:col-span-2">
+                    <div className="flex gap-3">
                         <button onClick={() => downloadReport('excel')} disabled={downloading}
-                            className="btn-primary flex-1 flex items-center justify-center gap-2 disabled:opacity-50">
+                            className="btn-primary flex items-center gap-2 disabled:opacity-50">
                             <HiOutlineDownload /> Excel (.xlsx)
                         </button>
                         <button onClick={() => downloadReport('csv')} disabled={downloading}
-                            className="btn-secondary flex-1 flex items-center justify-center gap-2 disabled:opacity-50">
+                            className="btn-secondary flex items-center gap-2 disabled:opacity-50">
                             <HiOutlineDownload /> CSV
                         </button>
                     </div>

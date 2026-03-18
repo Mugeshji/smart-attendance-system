@@ -68,17 +68,17 @@ export default function Students() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-                    <h1 className="text-2xl sm:text-3xl font-bold gradient-text">Student Management</h1>
-                    <p className="text-[var(--text-muted)] text-xs sm:text-sm mt-1">{students.length} students enrolled</p>
+                    <h1 className="text-3xl font-bold gradient-text">Student Management</h1>
+                    <p className="text-[var(--text-muted)] text-sm mt-1">{students.length} students enrolled</p>
                 </motion.div>
 
-                <div className="flex flex-col xs:flex-row gap-3">
-                    <div className="relative flex-1 xs:flex-none">
+                <div className="flex gap-3">
+                    <div className="relative">
                         <HiOutlineSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-                        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..."
-                            className="input-glass pl-10 !py-2.5 !text-sm w-full xs:w-48 sm:w-60" />
+                        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search students..."
+                            className="input-glass pl-10 !py-2.5 !text-sm" style={{ width: 240 }} />
                     </div>
-                    <button onClick={openAdd} className="btn-primary flex items-center justify-center gap-2 !py-2.5 text-sm">
+                    <button onClick={openAdd} className="btn-primary flex items-center gap-2 !py-2.5 text-sm">
                         <HiOutlinePlus /> Add Student
                     </button>
                 </div>
