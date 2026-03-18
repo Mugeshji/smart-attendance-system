@@ -57,7 +57,7 @@ export default function Dashboard() {
                 <h1 className="text-3xl font-bold">
                     <span className="gradient-text">Command Center</span>
                 </h1>
-                <p className="text-[var(--text-muted)] text-sm mt-1">Real-time classroom intelligence overview</p>
+                <p className="text-[var(--text-muted)] text-sm mt-1">Real-time classroom intelligence overview</p> <br />
             </motion.div>
 
             {/* Empty State Warning */}
@@ -73,13 +73,13 @@ export default function Dashboard() {
 
             {/* Stat Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                <StatCard title="Total Students" value={stats?.totalStudents ?? '—'} icon={HiOutlineUsers} color="cyan" delay={0} />
-                <StatCard title="Present Today" value={stats?.presentToday ?? '—'} icon={HiOutlineCheckCircle} color="green" delay={0.1} />
-                <StatCard title="Absent Today" value={stats?.absentToday ?? '—'} icon={HiOutlineXCircle} color="red" delay={0.2} />
-                <StatCard title="Checked Out" value={stats?.checkedOutToday ?? '—'} icon={HiOutlineExit} color="blue" delay={0.3} />
-                <StatCard title="Currently Inside" value={stats?.currentlyInside ?? '—'} icon={HiOutlineStatusOnline} color="violet" delay={0.4} />
+                <StatCard title="&nbsp;&nbsp;Total Students" value={stats?.totalStudents ?? '—'} icon={HiOutlineUsers} color="cyan" delay={0} />
+                <StatCard title="&nbsp;&nbsp;Present Today" value={stats?.presentToday ?? '—'} icon={HiOutlineCheckCircle} color="green" delay={0.1} />
+                <StatCard title="&nbsp;&nbsp;Absent Today" value={stats?.absentToday ?? '—'} icon={HiOutlineXCircle} color="red" delay={0.2} />
+                <StatCard title="&nbsp;&nbsp;Checked Out" value={stats?.checkedOutToday ?? '—'} icon={HiOutlineExit} color="blue" delay={0.3} />
+                <StatCard title="&nbsp;&nbsp;Currently Inside" value={stats?.currentlyInside ?? '—'} icon={HiOutlineStatusOnline} color="violet" delay={0.4} />
             </div>
-
+            <br />
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Pie Chart */}
