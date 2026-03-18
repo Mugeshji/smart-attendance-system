@@ -7,6 +7,23 @@ import api from '../api/axios';
 
 const COLORS = ['#10b981', '#ef4444', '#3b82f6'];
 
+const formatDate = (dateStr) => {
+    try {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } catch { return dateStr; }
+};
+
+const generateEmptyData = (days) => {
+    const data = [];
+    for (let i = days - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        data.push({ date: d.toISOString().split('T')[0], count: 0 });
+    }
+    return data;
+};
+
 export default function Dashboard() {
     const [stats, setStats] = useState(null);
     const [pieData, setPieData] = useState([]);
@@ -27,8 +44,12 @@ export default function Dashboard() {
                 { name: 'Absent', value: pieRes.data.absent || 0 },
                 { name: 'Checked Out', value: pieRes.data.checkedOut || 0 },
             ]);
-            setWeeklyData(weeklyRes.data.data || []);
-            setMonthlyData(monthlyRes.data.data || []);
+            
+            const wData = weeklyRes.data.data || [];
+            setWeeklyData(wData.length > 0 ? wData : generateEmptyData(7));
+            
+            const mData = monthlyRes.data.data || [];
+            setMonthlyData(mData.length > 0 ? mData : generateEmptyData(30));
         } catch (err) { console.error(err); }
     };
 
@@ -96,8 +117,9 @@ export default function Dashboard() {
                             </PieChart>
                         ) : (
                             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <div className="w-40 h-40 rounded-full border-[12px] border-white/5 flex items-center justify-center">
-                                    <span className="text-xs text-[var(--text-muted)] text-center px-4">No attendance marked</span>
+                                <div className="w-44 h-44 rounded-full border-[1.5px] border-dashed border-white/20 flex items-center justify-center relative">
+                                    <div className="absolute inset-2 rounded-full border border-white/5 bg-white/[0.02]" />
+                                    <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)] font-medium z-10">No Records</span>
                                 </div>
                             </div>
                         )}
@@ -117,19 +139,19 @@ export default function Dashboard() {
                     className="glass-card p-6">
                     <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-4 uppercase tracking-wider">Weekly Attendance</h3>
                     <ResponsiveContainer width="100%" height={250}>
-                        {weeklyData.length > 0 ? (
-                            <BarChart data={weeklyData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                                <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
-                                <YAxis tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
-                                <Tooltip content={<CustomTooltip />} />
-                                <Bar dataKey="count" fill="#00f0ff" radius={[6, 6, 0, 0]} />
-                            </BarChart>
-                        ) : (
-                            <div className="h-full flex items-center justify-center text-[var(--text-muted)] text-sm">
-                                No weekly data available
-                            </div>
-                        )}
+                        <BarChart data={weeklyData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                            <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={formatDate} minTickGap={20} />
+                            <YAxis tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
+                            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                            <Bar dataKey="count" fill="url(#barGradient)" radius={[6, 6, 0, 0]} />
+                            <defs>
+                                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#00f0ff" stopOpacity={1} />
+                                    <stop offset="100%" stopColor="#00f0ff" stopOpacity={0.3} />
+                                </linearGradient>
+                            </defs>
+                        </BarChart>
                     </ResponsiveContainer>
                 </motion.div>
 
@@ -138,19 +160,13 @@ export default function Dashboard() {
                     className="glass-card p-6">
                     <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-4 uppercase tracking-wider">Monthly Trends</h3>
                     <ResponsiveContainer width="100%" height={250}>
-                        {monthlyData.length > 0 ? (
-                            <LineChart data={monthlyData}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                                <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
-                                <YAxis tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
-                                <Tooltip content={<CustomTooltip />} />
-                                <Line type="monotone" dataKey="count" stroke="#a855f7" strokeWidth={2} dot={{ fill: '#a855f7', r: 3 }} activeDot={{ r: 5 }} />
-                            </LineChart>
-                        ) : (
-                            <div className="h-full flex items-center justify-center text-[var(--text-muted)] text-sm">
-                                No monthly trends available
-                            </div>
-                        )}
+                        <LineChart data={monthlyData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                            <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={formatDate} minTickGap={40} />
+                            <YAxis tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickLine={false} />
+                            <Tooltip content={<CustomTooltip />} />
+                            <Line type="monotone" dataKey="count" stroke="#a855f7" strokeWidth={3} dot={{ fill: '#a855f7', r: 0 }} activeDot={{ r: 5, stroke: '#a855f7', strokeWidth: 2, fill: '#000' }} />
+                        </LineChart>
                     </ResponsiveContainer>
                 </motion.div>
             </div>

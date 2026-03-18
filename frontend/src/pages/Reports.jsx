@@ -7,6 +7,23 @@ import toast from 'react-hot-toast';
 
 const COLORS = ['#10b981', '#ef4444', '#3b82f6'];
 
+const formatDate = (dateStr) => {
+    try {
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } catch { return dateStr; }
+};
+
+const generateEmptyData = (days) => {
+    const data = [];
+    for (let i = days - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        data.push({ date: d.toISOString().split('T')[0], count: 0 });
+    }
+    return data;
+};
+
 export default function Reports() {
     const [pieData, setPieData] = useState([]);
     const [weeklyData, setWeeklyData] = useState([]);
@@ -22,12 +39,16 @@ export default function Reports() {
             api.get('/attendance/monthly'),
         ]).then(([pie, weekly, monthly]) => {
             setPieData([
-                { name: 'Present', value: pie.data.present || 0 },
+                { name: 'Present', value: pie.data.present || 0 }, // Slices are disjoint (Inside, CheckedOut, Absent)
                 { name: 'Absent', value: pie.data.absent || 0 },
                 { name: 'Checked Out', value: pie.data.checkedOut || 0 },
             ]);
-            setWeeklyData(weekly.data.data || []);
-            setMonthlyData(monthly.data.data || []);
+            
+            const wData = weekly.data.data || [];
+            setWeeklyData(wData.length > 0 ? wData : generateEmptyData(7));
+            
+            const mData = monthly.data.data || [];
+            setMonthlyData(mData.length > 0 ? mData : generateEmptyData(30));
         }).catch(console.error);
     }, []);
 
@@ -84,13 +105,22 @@ export default function Reports() {
                     className="glass-card p-6">
                     <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">Present vs Absent</h3>
                     <ResponsiveContainer width="100%" height={280}>
-                        <PieChart>
-                            <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                                {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                            </Pie>
-                            <Tooltip content={<CustomTooltip />} />
-                            <Legend wrapperStyle={{ fontSize: '12px', color: '#94a3b8' }} />
-                        </PieChart>
+                        {pieData.reduce((sum, item) => sum + item.value, 0) > 0 ? (
+                            <PieChart>
+                                <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                                    {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                                </Pie>
+                                <Tooltip content={<CustomTooltip />} />
+                                <Legend wrapperStyle={{ fontSize: '12px', color: '#94a3b8' }} />
+                            </PieChart>
+                        ) : (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <div className="w-52 h-52 rounded-full border-[2px] border-dashed border-white/20 flex items-center justify-center relative">
+                                    <div className="absolute inset-3 rounded-full border border-white/5 bg-white/[0.02]" />
+                                    <span className="text-xs uppercase tracking-widest text-[var(--text-muted)] font-medium z-10">No Distribution Data</span>
+                                </div>
+                            </div>
+                        )}
                     </ResponsiveContainer>
                 </motion.div>
 
@@ -100,11 +130,17 @@ export default function Reports() {
                     <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">Weekly Attendance</h3>
                     <ResponsiveContainer width="100%" height={280}>
                         <BarChart data={weeklyData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                            <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                            <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickFormatter={formatDate} minTickGap={20} />
                             <YAxis tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Bar dataKey="count" fill="#00f0ff" radius={[8, 8, 0, 0]} />
+                            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                            <Bar dataKey="count" fill="url(#barGradientReports)" radius={[8, 8, 0, 0]} />
+                            <defs>
+                                <linearGradient id="barGradientReports" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#00f0ff" stopOpacity={1} />
+                                    <stop offset="100%" stopColor="#00f0ff" stopOpacity={0.3} />
+                                </linearGradient>
+                            </defs>
                         </BarChart>
                     </ResponsiveContainer>
                 </motion.div>
@@ -115,11 +151,11 @@ export default function Reports() {
                     <h3 className="text-sm font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-4">Monthly Trends (30 days)</h3>
                     <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={monthlyData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                            <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                            <XAxis dataKey="date" tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} tickFormatter={formatDate} minTickGap={40} />
                             <YAxis tick={{ fill: '#64748b', fontSize: 10 }} axisLine={false} />
                             <Tooltip content={<CustomTooltip />} />
-                            <Line type="monotone" dataKey="count" stroke="#a855f7" strokeWidth={2.5} dot={{ fill: '#a855f7', r: 3 }} activeDot={{ r: 6, fill: '#a855f7' }} />
+                            <Line type="monotone" dataKey="count" stroke="#a855f7" strokeWidth={3} dot={{ fill: '#a855f7', r: 0 }} activeDot={{ r: 6, fill: '#000', stroke: '#a855f7', strokeWidth: 2 }} />
                         </LineChart>
                     </ResponsiveContainer>
                 </motion.div>
