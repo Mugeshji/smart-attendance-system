@@ -93,12 +93,12 @@ export default function Dashboard() {
             )}
 
             {/* Stat Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                <StatCard title="&nbsp;&nbsp;Total Students" value={stats?.totalStudents ?? '—'} icon={HiOutlineUsers} color="cyan" delay={0} />
-                <StatCard title="&nbsp;&nbsp;Present Today" value={stats?.presentToday ?? '—'} icon={HiOutlineCheckCircle} color="green" delay={0.1} />
-                <StatCard title="&nbsp;&nbsp;Absent Today" value={stats?.absentToday ?? '—'} icon={HiOutlineXCircle} color="red" delay={0.2} />
-                <StatCard title="&nbsp;&nbsp;Checked Out" value={stats?.checkedOutToday ?? '—'} icon={HiOutlineExit} color="blue" delay={0.3} />
-                <StatCard title="&nbsp;&nbsp;Currently Inside" value={stats?.currentlyInside ?? '—'} icon={HiOutlineStatusOnline} color="violet" delay={0.4} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <StatCard title="Total Students" value={stats?.totalStudents ?? '—'} icon={HiOutlineUsers} color="var(--accent-cyan)" delay={0} />
+                <StatCard title="Present Today" value={stats?.presentToday ?? '—'} icon={HiOutlineCheckCircle} color="#10b981" delay={0.1} />
+                <StatCard title="Absent Today" value={stats?.absentToday ?? '—'} icon={HiOutlineXCircle} color="#ef4444" delay={0.2} />
+                <StatCard title="Checked Out" value={stats?.checkedOutToday ?? '—'} icon={HiOutlineExit} color="#3b82f6" delay={0.3} />
+                <StatCard title="Currently Inside" value={stats?.currentlyInside ?? '—'} icon={HiOutlineStatusOnline} color="#a855f7" delay={0.4} />
             </div>
             <br />
             {/* Charts Row */}
@@ -110,7 +110,16 @@ export default function Dashboard() {
                     <ResponsiveContainer width="100%" height={220}>
                         {pieData.reduce((sum, item) => sum + item.value, 0) > 0 ? (
                             <PieChart>
-                                <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={5} dataKey="value">
+                                <Pie 
+                                    data={pieData} 
+                                    cx="50%" 
+                                    cy="50%" 
+                                    innerRadius={55} 
+                                    outerRadius={80} 
+                                    paddingAngle={5} 
+                                    dataKey="value"
+                                    label={({ name, percent, value }) => value > 0 ? `${name} ${(percent * 100).toFixed(0)}%` : ''}
+                                >
                                     {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                                 </Pie>
                                 <Tooltip content={<CustomTooltip />} />
