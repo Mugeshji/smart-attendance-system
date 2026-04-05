@@ -4,7 +4,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "students")
+@Table(name = "students", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"roll_number", "professor_id"}),
+    @UniqueConstraint(columnNames = {"barcode_id", "professor_id"})
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,7 +19,7 @@ public class Student {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "roll_number", nullable = false, unique = true)
+    @Column(name = "roll_number", nullable = false)
     private String rollNumber;
 
     @Column(nullable = false)
@@ -26,7 +29,7 @@ public class Student {
 
     private String phone;
 
-    @Column(name = "barcode_id", nullable = false, unique = true)
+    @Column(name = "barcode_id", nullable = false)
     private String barcodeId;
 
     @ManyToOne(fetch = FetchType.LAZY)

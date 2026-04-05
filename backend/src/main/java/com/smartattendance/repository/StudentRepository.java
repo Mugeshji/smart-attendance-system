@@ -17,4 +17,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     boolean existsByBarcodeId(String barcodeId);
 
     boolean existsByRollNumber(String rollNumber);
+
+    boolean existsByRollNumberAndProfessorId(String rollNumber, Long professorId);
+
+    boolean existsByBarcodeIdAndProfessorId(String barcodeId, Long professorId);
 }

@@ -3,7 +3,7 @@ package com.smartattendance.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "attendance")
@@ -26,10 +26,10 @@ public class Attendance {
     private LocalDate date;
 
     @Column(name = "check_in_time")
-    private LocalTime checkInTime;
+    private LocalDateTime checkInTime;
 
     @Column(name = "check_out_time")
-    private LocalTime checkOutTime;
+    private LocalDateTime checkOutTime;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -5,6 +5,18 @@ import StatusBadge from '../components/StatusBadge';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 
+/** Format a time value for display. Handles pre-formatted strings like "11:10 PM"
+ *  as well as ISO datetime strings like "2026-04-05T23:10:33". */
+const formatTime = (value) => {
+    if (!value) return '—';
+    // If the backend already formatted it (contains AM/PM), return as-is
+    if (/[AP]M$/i.test(value)) return value;
+    // Otherwise try to parse as a Date and format to local time
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return value;
+    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+};
+
 const emptyStudent = { rollNumber: '', name: '', email: '', phone: '', barcodeId: '' };
 
 export default function Students() {
@@ -111,8 +123,8 @@ export default function Students() {
                                         <td className="px-5 py-3.5 text-sm text-[var(--text-secondary)]">{s.email || '—'}</td>
                                         <td className="px-5 py-3.5 text-sm text-[var(--text-secondary)]">{s.phone || '—'}</td>
                                         <td className="px-5 py-3.5"><StatusBadge status={s.todayStatus || 'ABSENT'} /></td>
-                                        <td className="px-5 py-3.5 text-sm text-[var(--text-secondary)]">{s.checkInTime || '—'}</td>
-                                        <td className="px-5 py-3.5 text-sm text-[var(--text-secondary)]">{s.checkOutTime || '—'}</td>
+                                        <td className="px-5 py-3.5 text-sm text-[var(--text-secondary)]">{formatTime(s.checkInTime)}</td>
+                                        <td className="px-5 py-3.5 text-sm text-[var(--text-secondary)]">{formatTime(s.checkOutTime)}</td>
                                         <td className="px-5 py-3.5">
                                             <div className="flex gap-2">
                                                 <button onClick={() => openEdit(s)} className="p-1.5 rounded-lg hover:bg-white/5 text-[var(--accent-cyan)] transition-colors"><HiOutlinePencil /></button>

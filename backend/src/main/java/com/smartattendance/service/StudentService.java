@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,11 +32,11 @@ public class StudentService {
     }
 
     public StudentDTO createStudent(Long professorId, StudentDTO dto) {
-        if (studentRepository.existsByRollNumber(dto.getRollNumber())) {
-            throw new RuntimeException("Roll number already exists");
+        if (studentRepository.existsByRollNumberAndProfessorId(dto.getRollNumber(), professorId)) {
+            throw new RuntimeException("Roll number already exists for this professor");
         }
-        if (studentRepository.existsByBarcodeId(dto.getBarcodeId())) {
-            throw new RuntimeException("Barcode ID already exists");
+        if (studentRepository.existsByBarcodeIdAndProfessorId(dto.getBarcodeId(), professorId)) {
+            throw new RuntimeException("Barcode ID already exists for this professor");
         }
 
         Professor professor = professorRepository.findById(professorId)
@@ -80,6 +81,8 @@ public class StudentService {
         studentRepository.deleteById(id);
     }
 
+    private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("hh:mm a");
+
     private StudentDTO enrichWithAttendance(Student student) {
         StudentDTO dto = toDTO(student);
         Optional<Attendance> todayAttendance = attendanceRepository
@@ -88,8 +91,8 @@ public class StudentService {
         if (todayAttendance.isPresent()) {
             Attendance att = todayAttendance.get();
             dto.setTodayStatus(att.getStatus().name());
-            dto.setCheckInTime(att.getCheckInTime() != null ? att.getCheckInTime().toString() : null);
-            dto.setCheckOutTime(att.getCheckOutTime() != null ? att.getCheckOutTime().toString() : null);
+            dto.setCheckInTime(att.getCheckInTime() != null ? att.getCheckInTime().format(TIME_FMT) : null);
+            dto.setCheckOutTime(att.getCheckOutTime() != null ? att.getCheckOutTime().format(TIME_FMT) : null);
         } else {
             dto.setTodayStatus("ABSENT");
         }

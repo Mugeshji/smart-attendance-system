@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -19,19 +20,22 @@ public class AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final StudentRepository studentRepository;
 
+    private static final ZoneId IST = ZoneId.of("Asia/Kolkata");
+
     public AttendanceDTO checkIn(String barcodeId) {
         Student student = studentRepository.findByBarcodeId(barcodeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with barcode: " + barcodeId));
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(IST);
         Optional<Attendance> existing = attendanceRepository.findByStudentIdAndDate(student.getId(), today);
 
         if (existing.isPresent()) {
             throw new RuntimeException("Student already checked in today");
         }
 
-        LocalTime now = LocalTime.now();
-        AttendanceStatus status = now.isAfter(LocalTime.of(9, 15)) ? AttendanceStatus.LATE : AttendanceStatus.PRESENT;
+        LocalDateTime now = LocalDateTime.now(IST);
+        AttendanceStatus status = now.toLocalTime().isAfter(LocalTime.of(9, 15))
+                ? AttendanceStatus.LATE : AttendanceStatus.PRESENT;
 
         Attendance attendance = Attendance.builder()
                 .student(student)
@@ -48,11 +52,11 @@ public class AttendanceService {
         Student student = studentRepository.findByBarcodeId(barcodeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with barcode: " + barcodeId));
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(IST);
         Attendance attendance = attendanceRepository.findByStudentIdAndDate(student.getId(), today)
                 .orElseThrow(() -> new RuntimeException("No check-in record found for today"));
 
-        attendance.setCheckOutTime(LocalTime.now());
+        attendance.setCheckOutTime(LocalDateTime.now(IST));
         attendance.setStatus(AttendanceStatus.CHECKED_OUT);
         attendance = attendanceRepository.save(attendance);
 
@@ -60,12 +64,12 @@ public class AttendanceService {
     }
 
     public List<AttendanceDTO> getTodayAttendance(Long professorId) {
-        List<Attendance> records = attendanceRepository.findByDateAndStudentProfessorId(LocalDate.now(), professorId);
+        List<Attendance> records = attendanceRepository.findByDateAndStudentProfessorId(LocalDate.now(IST), professorId);
         return records.stream().map(this::toDTO).collect(Collectors.toList());
     }
 
     public DashboardStats getDashboardStats(Long professorId) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(IST);
 
         long totalStudents = studentRepository.findByProfessorId(professorId).size();
         long presentToday = attendanceRepository.countByDateAndStatusAndProfessorId(today, AttendanceStatus.PRESENT,
@@ -87,13 +91,13 @@ public class AttendanceService {
     }
 
     public Map<String, Object> getWeeklyStats(Long professorId) {
-        LocalDate end = LocalDate.now();
+        LocalDate end = LocalDate.now(IST);
         LocalDate start = end.minusDays(6);
         return getStatsForRange(professorId, start, end);
     }
 
     public Map<String, Object> getMonthlyStats(Long professorId) {
-        LocalDate end = LocalDate.now();
+        LocalDate end = LocalDate.now(IST);
         LocalDate start = end.minusDays(29);
         return getStatsForRange(professorId, start, end);
     }
@@ -128,14 +132,16 @@ public class AttendanceService {
         return pie;
     }
 
+    private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("hh:mm a");
+
     private AttendanceDTO toDTO(Attendance a) {
         return AttendanceDTO.builder()
                 .id(a.getId())
                 .studentName(a.getStudent().getName())
                 .rollNumber(a.getStudent().getRollNumber())
                 .date(a.getDate().toString())
-                .checkInTime(a.getCheckInTime() != null ? a.getCheckInTime().toString() : null)
-                .checkOutTime(a.getCheckOutTime() != null ? a.getCheckOutTime().toString() : null)
+                .checkInTime(a.getCheckInTime() != null ? a.getCheckInTime().format(TIME_FMT) : null)
+                .checkOutTime(a.getCheckOutTime() != null ? a.getCheckOutTime().format(TIME_FMT) : null)
                 .status(a.getStatus().name())
                 .build();
     }
