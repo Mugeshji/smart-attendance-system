@@ -33,4 +33,6 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     @Query("SELECT a FROM Attendance a JOIN FETCH a.student WHERE a.date BETWEEN :start AND :end AND a.student.professor.id = :profId ORDER BY a.date DESC, a.checkInTime DESC")
     List<Attendance> findByDateRangeAndProfessor(@Param("start") LocalDate start, @Param("end") LocalDate end,
             @Param("profId") Long profId);
+
+    void deleteByStudentId(Long studentId);
 }

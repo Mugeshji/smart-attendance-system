@@ -6,6 +6,7 @@ import com.smartattendance.exception.ResourceNotFoundException;
 import com.smartattendance.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -74,10 +75,12 @@ public class StudentService {
         return enrichWithAttendance(student);
     }
 
+    @Transactional
     public void deleteStudent(Long id) {
         if (!studentRepository.existsById(id)) {
             throw new ResourceNotFoundException("Student not found");
         }
+        attendanceRepository.deleteByStudentId(id);
         studentRepository.deleteById(id);
     }
 
